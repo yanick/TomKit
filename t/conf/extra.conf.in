@@ -1,0 +1,16 @@
+PerlSwitches -I@ServerRoot@/../lib
+
+PerlSetVar AxCacheDir @ServerRoot@/tmp/axkittest
+
+<Location /xslt/base.xml>
+    PerlFixupHandler Apache2::TomKit
+    PerlSetVar AxAddProcessorDef "text/xsl=>xslt/base.xsl"
+    PerlSetVar AxAddProcessorMap "text/xsl=>Apache2::TomKit::Processor::LibXSLT"
+</Location>
+
+<Location /xslt/chain.xml>
+    PerlFixupHandler Apache2::TomKit
+    PerlAddVar AxAddProcessorDef "text/xsl=>xslt/base.xsl"
+    PerlAddVar AxAddProcessorDef "text/xsl=>xslt/chain.xsl"
+    PerlSetVar AxAddProcessorMap "text/xsl=>Apache2::TomKit::Processor::LibXSLT"
+</Location>

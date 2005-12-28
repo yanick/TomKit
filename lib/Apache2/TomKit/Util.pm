@@ -1,0 +1,220 @@
+package Apache2::TomKit::Util;
+
+use strict;
+use warnings;
+use Carp;
+
+our %registeredProtocols;
+
+
+## -----------------------------------------------
+## public static loadModule
+## -----------------------------------------------
+##
+## Arguments:
+##      String ... fully qualified module-name
+## Description:
+##      Sometimes we need to load a module at runtime using require. This method
+##      does the job for us
+## Return:
+##      void
+sub loadModule {
+    my $module = shift;
+    $module =~ s/::/\//g;
+    $module .= ".pm";
+    require( $module );
+}
+
+## -----------------------------------------------
+## public static setUpProcessor
+## -----------------------------------------------
+##
+## Arguments:
+## 		Apache2::TomKit::ProcessorChain .......... the processor-chain instance
+##		Apache2::TomKit::Logging ................. the logging instance
+##		Apache2::TomKit::Config::DefaultConfig ... the configuration instance
+##		@string-array ............................ the processor definitions
+## Description:
+##   In different places of TomKit we have to set up a processor chain. This method
+##   does the whole magic for us. The processor-definitions are passed as an String-Array.
+##   One item of the String array matches the following pattern:
+##
+##   ${typeMape}=>${relative_path_from_document-root_2_definition|absolute-path in filesystem}
+##
+## Return:
+##		void
+sub setUpProcessor {
+    my $chain   = shift;
+    my $logging = shift;
+    my $config  = shift;
+    my @processorDefs = @_;
+
+    $logging->debug(9,"Moving to another directory: " . $config->{apr}->document_root() );    
+    $logging->debug(9,"We are going to add " . (scalar @processorDefs) . " processors.");
+
+    my $type;
+    my $defintion;
+
+    foreach ( @processorDefs ) {
+        ($type,$defintion) = split( "=>", $_ );
+
+        if( $defintion !~ /^\// ) {
+            $defintion = $config->{apr}->document_root() . "/" . $defintion;
+        }
+
+        $chain->add2chain( $type, $defintion );
+    }
+}
+
+sub createDependency {
+    my $logger             = shift;
+    my $config             = shift;
+    my $protocol           = shift;
+    my $definitionLocation = shift;
+
+    return $registeredProtocols{$protocol}->new($logger,$config,$definitionLocation);	
+}
+
+sub registerDefinitionProvider {
+    my $protocol  = shift;
+    my $className = shift;
+
+    if( ! exists $registeredProtocols{$protocol} ) {
+        $registeredProtocols{$protocol} = $className;
+    } else {
+        carp "There's already a provider registered for this protocol";
+    }
+}
+
+sub isProtocolRegistered {
+    my $protocol = shift;
+    return exists $registeredProtocols{$protocol};
+}
+
+
+package Apache2::TomKit::Util::LibXML;
+
+sub new {
+    my $class = shift;
+    bless { dependencyCollector => shift }, $class;
+}
+
+sub match_cb {
+    my $this = shift;
+    my $uri  = shift;
+
+    $this->{dependencyCollector}->{logger}->debug(9,"Matched callback: " . $uri);
+
+    if( $uri =~ /^((\w+:\/\/)|\/)/ ) {
+        my $protocol = $1;
+        if( &Apache2::TomKit::Util::isProtocolRegistered( $protocol ) ) {
+            ## We add them to our dependencies but let LibXSLT retrieve the values
+            my $dependency = Apache2::TomKit::Util::createDependency( $this->{dependencyCollector}->{logger}, $this->{dependencyCollector}->{config}, $protocol,$uri);
+            $this->{dependencyCollector}->addDependency($dependency);
+            if( $protocol eq "file://" || $protocol eq "/" ) {
+                return 0;
+            } else {
+                return 1;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
+
+sub open_cb {
+    my $this = shift;
+    my $uri  = shift;
+    $uri =~ /^((\w+:\/\/)|\/)/;
+
+    my $protocol = $1;
+    my $dependency = Apache2::TomKit::Util::createDependency($this->{dependencyCollector}->{logger}, $this->{dependencyCollector}->{config}, $protocol, $uri);
+
+    return $dependency->getInstructions();
+}
+
+sub read_cb {
+    return substr($_[0], 0, $_[1], "");
+}
+
+sub close_cb {
+}
+
+
+1;
+
+__END__
+
+=head1 NAME
+
+TomKit - Perl Module used to Transform Content
+
+=head1 SYNOPSIS
+
+ Only used internally
+  
+=head1 DESCRIPTION
+
+This module provides utility functions used by TomKit-Modules
+
+=head1 API
+
+=head2 loadModule
+
+=head3 Arguments:
+
+=over
+  
+=item String ... fully qualified module-name
+
+=back
+
+=head3 Description:
+
+Sometimes we need to load a module at runtime using require. This method
+does the job for us
+
+=head2 setUpProcessor
+
+=head3 Arguments:
+
+=over
+
+=item Apache2::TomKit::ProcessorChain .......... the processor-chain instance
+
+=item Apache2::TomKit::Logging ................. the logging instance
+
+=item Apache2::TomKit::Config::DefaultConfig ... the configuration instance
+
+=item @string-array ............................ the processor definitions
+
+=back
+
+=head3 Description:
+
+In different places of TomKit we have to set up a processor chain. THis method
+does the whole magic for us. The processor-definitions are passed as an String-Array.
+One item of the String array matches the following pattern:
+
+  ${typeMape}=>${relative_path_from_document-root_2_definition}
+
+=head1 SEE ALSO
+
+Apache2, Apache2::TomKit, Apache2::TomKit::ProcessorChain, Apache2::TomKit::Logging, 
+Apache2::TomKit::Config::DefaultConfig
+
+=head1 AUTHOR
+
+Tom Schindl, E<lt>tom.schindl@bestsolution.atE<gt>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2005 by Tom Schindl and BestSolution Systemhaus GmbH
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.6 or,
+at your option, any later version of Perl 5 you may have available.
+
+=cut
