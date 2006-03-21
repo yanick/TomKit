@@ -1,3 +1,21 @@
+## -----------------------------------------------------------------
+## Copyright (c) 2005-2006 BestSolution.at EDV Systemhaus GmbH
+## All Rights Reserved.
+##
+## BestSolution.at GmbH MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE
+## SUITABILITY OF THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING
+## BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY,
+## FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+## BestSolution.at GmbH SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+## LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THIS
+## SOFTWARE OR ITS DERIVATIVES.
+## ----------------------------------------------------------------
+##
+## This library is free software; you can redistribute it and/or modify
+## it under the same terms as Perl itself, either Perl version 5.8.6 or,
+## at your option, any later version of Perl 5 you may have available.
+##
+
 package Apache2::TomKit::Processor::LibXSLT;
 
 use XML::LibXML;
@@ -42,7 +60,9 @@ sub setUp {
     local($XML::LibXML::match_cb, $XML::LibXML::open_cb,
           $XML::LibXML::read_cb, $XML::LibXML::close_cb);
 
-    my $util = Apache2::TomKit::Util::LibXML->new( $this );
+    my $util = Apache2::TomKit::Util::LibXML->new( $this, $this->{logger}, $this->{config} );
+
+    $this->{logger}->debug(10,"Start parsing XSL-Stylesheet");
 
     $XML::LibXML::match_cb = sub { return $util->match_cb(@_); };
     $XML::LibXML::open_cb  = sub { return $util->open_cb(@_); };
@@ -51,13 +71,11 @@ sub setUp {
 
     my $style_doc;
 
-    if( $this->{processordef}->isFile() ) {
-        $style_doc = $parser->parse_file( $this->{processordef}->getInstructions() );
-    } else {
-        $style_doc = $parser->parse_string( $this->{processordef}->getInstructions() );
-    }
-
+    $style_doc = $parser->parse_string( $this->{processordef}->getContent() );
+    
     my $stylesheet = $xslt->parse_stylesheet($style_doc);
+
+    $this->{logger}->debug(10,"End parsing XSL-Stylesheet");
 
     $this->{stylesheet} = $stylesheet;
 }

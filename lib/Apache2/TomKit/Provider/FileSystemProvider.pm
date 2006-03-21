@@ -16,54 +16,53 @@
 ## at your option, any later version of Perl 5 you may have available.
 ##
 
-package Apache2::TomKit::Processor::DefinitionProvider::FileSystemProvider;
+package Apache2::TomKit::Provider::FileSystemProvider;
 
-use base qw( Apache2::TomKit::Processor::DefinitionProvider::AbstractProvider );
-
+use Apache2::RequestIO;
+use Apache2::RequestRec;
+use Apache2::Const;
 use strict;
-use warnings;
 
-use Apache2::TomKit::Util;
+use base qw( Apache2::TomKit::IProvider );
 
-&Apache2::TomKit::Util::registerDefinitionProvider( "file://", __PACKAGE__ );
-&Apache2::TomKit::Util::registerDefinitionProvider( "/", __PACKAGE__ );
-
-sub init {
-    my $this     = shift;
-    my $filename = shift;
-
-    $filename =~ s|^file://||;
-
-	$this->{logger}->debug(9,"THe definition file is: " . $filename );
-
-    $this->{definition} = $filename;
+sub new {
+	my $class  = shift;
+	my $logger = shift;
+	my $config = shift;
+	
+	$logger->debug(10, "New File Provider created");
+	
+	bless {
+		logger => $logger,
+		config => $config
+	}, $class;
 }
 
-sub getProtocol {
-    return "file://";
+sub thandler {
+	my $this = shift;
+	my $apr  = shift;
+    $apr->sendfile($apr->filename);
+    
+    return Apache2::Const::OK;
+}
+
+sub getFileContent {
+	my $logger = $_[0]->{logger};
+	my $contentRef = $_[0]->{config}->{apr}->slurp_filename;
+	
+	if( $logger->isLevelActive(10) ) {
+		$logger->debug(10, "Loaded content: " . ${ $contentRef } );
+	}
+	
+	return $contentRef;
 }
 
 sub getMTime {
-    return (stat($_[0]->{definition}))[9];
+    return $_[0]->{config}->{apr}->finfo()->mtime;
 }
 
-sub getInstructions {
-    return $_[0]->{definition};
-}
-
-sub getContent {
-	local $/ = undef;
-	my $content = "";
-	
-	open( FILE, "<".$_[0]->{definition} );
-		$content = <FILE>;
-	close( FILE );
-	
-	return $content;
-}
-
-sub getKey {
-    return $_[0]->{definition};
+sub createsDom {
+    return 0;
 }
 
 1;

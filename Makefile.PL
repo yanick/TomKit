@@ -9,7 +9,7 @@ my %require =
 	"mod_perl2"       => "", # any version will do
 );
 
-my @scripts = qw(t/TEST tmp);
+my @scripts = qw(t/TEST t/tmp);
 Apache::TestMM::filter_args();
 Apache::TestMM::generate_script('t/TEST');
 

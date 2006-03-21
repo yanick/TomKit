@@ -1,0 +1,1 @@
+<?xmlversion="1.0"?><html><head><title>SimpleCSS</title></head><body><h1>Whatever</h1></body></html>

@@ -1,3 +1,21 @@
+## -----------------------------------------------------------------
+## Copyright (c) 2005-2006 BestSolution.at EDV Systemhaus GmbH
+## All Rights Reserved.
+##
+## BestSolution.at GmbH MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE
+## SUITABILITY OF THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING
+## BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY,
+## FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+## BestSolution.at GmbH SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+## LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THIS
+## SOFTWARE OR ITS DERIVATIVES.
+## ----------------------------------------------------------------
+##
+## This library is free software; you can redistribute it and/or modify
+## it under the same terms as Perl itself, either Perl version 5.8.6 or,
+## at your option, any later version of Perl 5 you may have available.
+##
+
 package Apache2::TomKit::Util;
 
 use strict;
@@ -96,47 +114,75 @@ package Apache2::TomKit::Util::LibXML;
 
 sub new {
     my $class = shift;
-    bless { dependencyCollector => shift }, $class;
+
+    bless { dependencyCollector => shift, logger => shift, config => shift }, $class;
 }
 
 sub match_cb {
     my $this = shift;
     my $uri  = shift;
 
-    $this->{dependencyCollector}->{logger}->debug(9,"Matched callback: " . $uri);
+    $this->{logger}->debug(9,"Matched callback: " . $uri);
+	
+	# Search for the protocol (We may have a custom one)
+	$uri =~ /^((\w+:\/\/)|\/)/;
+	my $protocol = $1;
 
-    if( $uri =~ /^((\w+:\/\/)|\/)/ ) {
-        my $protocol = $1;
-        if( &Apache2::TomKit::Util::isProtocolRegistered( $protocol ) ) {
-            ## We add them to our dependencies but let LibXSLT retrieve the values
-            my $dependency = Apache2::TomKit::Util::createDependency( $this->{dependencyCollector}->{logger}, $this->{dependencyCollector}->{config}, $protocol,$uri);
-            $this->{dependencyCollector}->addDependency($dependency);
-            if( $protocol eq "file://" || $protocol eq "/" ) {
-                return 0;
-            } else {
-                return 1;
-            }
-        } else {
-            return 0;
-        }
+    $this->{logger}->debug( 9, "Protocol: " . $protocol );
+
+	if( ! $this->{config}->getNoCompilance() ) {
+		if( $protocol eq "" ) {
+    		$this->{logger}->debug( 9, "Setting new Protocol to file because we are running in AxKit-Compilance mode" );
+    	 	$protocol = "file://";
+    	 	$uri = $this->{config}->{apr}->document_root() . "/" . $uri;
+    	} elsif( $uri =~ /^file:\/\/\w/ ) {
+    		$uri =~ s/^file:\/\///;
+    		$uri = $this->{config}->{apr}->document_root() . "/" . $uri;
+    	}
+	}
+    
+
+	# Check if this protocol is handled by use
+    if( &Apache2::TomKit::Util::isProtocolRegistered( $protocol ) ) {
+    	## We need to add us self to the dependencies
+    	my $dependency = Apache2::TomKit::Util::createDependency( $this->{logger}, $this->{config}, $protocol,$uri);
+    	$this->{dependencyCollector}->addDependency($dependency);
+    	
+    	if( $uri =~ /file:\/\/\/etc\/xml\/catalog/ ) {
+    		## We don't handle Catalog requests
+    		return 0;
+    	} elsif( $protocol eq "file://" || $protocol eq "/" ) {
+    		## We need to decide if file-request which can be handled by
+    		## LibXML itself should really be handled
+    		if( $this->{config}->getNoCompilance() ) {
+    			return 0;
+    		} else {
+    			$this->{cached_dependency} = $dependency;
+    			return 1;
+    		}
+    	} else {
+    		## This is a custom protocol LibXML can not understand
+    		$this->{cached_dependency} = $dependency;
+    		return 1;
+    	}
+    	
+    	# restore the dependency we need it in open_cb once more
+    	$this->{cached_dependency} = $dependency;
     } else {
-        return 0;
+    	$this->{logger}->debug( 9, "Could not find the protocol: " . $protocol );
+    	return 0;
     }
 }
 
 sub open_cb {
     my $this = shift;
-    my $uri  = shift;
-    $uri =~ /^((\w+:\/\/)|\/)/;
+    $this->{logger}->debug(9,"INSTRUCTIONS: " . $this->{cached_dependency}->getInstructions());
 
-    my $protocol = $1;
-    my $dependency = Apache2::TomKit::Util::createDependency($this->{dependencyCollector}->{logger}, $this->{dependencyCollector}->{config}, $protocol, $uri);
-
-    return $dependency->getInstructions();
+    return $this->{cached_dependency}->getContent();
 }
 
 sub read_cb {
-    return substr($_[0], 0, $_[1], "");
+    return substr($_[1], 0, $_[2], "");
 }
 
 sub close_cb {

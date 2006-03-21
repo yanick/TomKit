@@ -1,3 +1,21 @@
+## -----------------------------------------------------------------
+## Copyright (c) 2005-2006 BestSolution.at EDV Systemhaus GmbH
+## All Rights Reserved.
+##
+## BestSolution.at GmbH MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE
+## SUITABILITY OF THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING
+## BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY,
+## FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+## BestSolution.at GmbH SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+## LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THIS
+## SOFTWARE OR ITS DERIVATIVES.
+## ----------------------------------------------------------------
+##
+## This library is free software; you can redistribute it and/or modify
+## it under the same terms as Perl itself, either Perl version 5.8.6 or,
+## at your option, any later version of Perl 5 you may have available.
+##
+
 package Apache2::TomKit::Cache::AbstractCache;
 
 use APR::Finfo ();
@@ -41,7 +59,7 @@ sub deliverFromCache {
         my $provider = $contentProvider->new($logger,$config);
         $mtime = $provider->getMTime();
         $config->{apr}->handler("modperl");
-        $config->{apr}->set_handlers("PerlResponseHandler" => sub { $provider->instanceHandler( $config->{apr} ) });
+        $config->{apr}->set_handlers("PerlResponseHandler" => sub { $provider->thandler( $config->{apr} ) });
     } else {
         $logger->debug( 9, "Ok. It seems that the standard-apache is handling the source." );
         $mtime = $config->{apr}->finfo()->mtime();
@@ -49,6 +67,7 @@ sub deliverFromCache {
     }
 
     if( $mtime < 0 ) {
+    	$logger->debug( 9, "There's no mtime known there no cache entry'" );
 #       &setUpProcessor($chain,$logger,$config,$config->getProcessorDefs());
         return undef ;
     } else {

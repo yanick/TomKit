@@ -5,3 +5,14 @@ Revision history for Perl extension TomKit.
 
 0.01_2  Thu Dec 28 2005
         - fixed various bugs and released to CPAN
+
+0.01_3	Fri Mar 21 2006
+	- added test for custom providers
+	- added many many other tests
+	- fixed bugs: 
+		- https://webmail.bestsolution.at/mantis/view.php?id=1994
+		- https://webmail.bestsolution.at/mantis/view.php?id=943
+		  now by default relative paths in are prefixed with document-root
+		- https://webmail.bestsolution.at/mantis/view.php?id=1996
+		  if a transformation error occurrs an internal server is sent to the
+		  user

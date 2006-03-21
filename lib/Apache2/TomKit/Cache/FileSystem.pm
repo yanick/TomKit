@@ -1,3 +1,21 @@
+## -----------------------------------------------------------------
+## Copyright (c) 2005-2006 BestSolution.at EDV Systemhaus GmbH
+## All Rights Reserved.
+##
+## BestSolution.at GmbH MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE
+## SUITABILITY OF THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING
+## BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY,
+## FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+## BestSolution.at GmbH SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+## LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THIS
+## SOFTWARE OR ITS DERIVATIVES.
+## ----------------------------------------------------------------
+##
+## This library is free software; you can redistribute it and/or modify
+## it under the same terms as Perl itself, either Perl version 5.8.6 or,
+## at your option, any later version of Perl 5 you may have available.
+##
+
 package Apache2::TomKit::Cache::FileSystem;
 
 use strict;
@@ -50,8 +68,12 @@ sub deliverFromCacheImpl {
     if( -e $this->{cachefile} . "/$key" ) {
         my $docTime = (stat($this->{cachefile} . "/$key/content"))[9];
 
+		$this->{logger}->debug( 9, "Content-File mtime (" . $mtime . ") < doctime(" . $docTime . ")"  );
+
         if ( $mtime < $docTime ) {
             my $i = 0;
+
+			$this->{logger}->debug( 9, "Source document has not changed. Testing providers." );
 
             open( PROCESSORS, "<" . $this->{cachefile} . "/$key/processors" );
                 my $time;
@@ -68,10 +90,12 @@ sub deliverFromCacheImpl {
 
             &Apache2::TomKit::Util::setUpProcessor($processorChain,$this->{logger},$this->{config},@processorDefs);
             my $loadtime;
+			my $processor;
 
-            foreach( @{ $processorChain->{chain} } ) {
+            foreach $processor ( @{ $processorChain->{chain} } ) {
                 $loadtime = shift @loadtimes;
-                if( $loadtime > $_->getMTime() ) {
+                $this->{logger}->debug( 9, "Load-Time: $loadtime => " . $processor->getMTime() );
+                if( $loadtime >= $processor->getMTime() ) {
                     $useCached = 1;
                 } else {
                     $useCached = 0;
@@ -92,7 +116,7 @@ sub deliverFromCacheImpl {
                         ($loadtime,$provider,$definition) = split("#",$_);
                         chomp($definition);
                         $this->{logger}->debug( 7, "Checking $loadtime for: $provider => $definition" );
-                        if( $loadtime > $provider->new($this->{logger}, $this->{config}, $definition)->getMTime() ) {
+                        if( $loadtime >= $provider->new($this->{logger}, $this->{config}, $definition)->getMTime() ) {
                             $useCached = 1;
                         } else {
                             $useCached = 0;
@@ -111,7 +135,7 @@ sub deliverFromCacheImpl {
                     $rv->{content}  = <CONTENT>;
                 close(CONTENT);
             } else {
-                $this->{logger}->debug( 7, "One of the processor must have changed. We can not use the cached content" );
+                $this->{logger}->debug( 7, "One of the dependencies must have changed. We can not use the cached content" );
             }
         } else {
             $this->{logger}->debug( 7, "The file timestamp is newer than the one of the last delivery. We need to recreate everything." );
@@ -131,9 +155,6 @@ sub restore {
 
     $this->{logger}->debug( 9, "Restoring the content in the cache for later retrevial" );
 
-    ## TODO not 100% => should be mtime of created directory
-    my $time = time;
-
     if ( ! $cacheEntry->{isNew} ) {
         $this->{logger}->debug( 9, "Erasing old content");
         unlink $this->{cachefile} . "/" . $cacheEntry->{key};
@@ -148,14 +169,14 @@ sub restore {
     open( PROCESSORS, ">" . $this->{cachefile} . "/". $cacheEntry->{key} . "/processors" );
         foreach ( @{ $cacheEntry->{processorChain}->{chain} } ) {
             $this->{logger}->debug( 9, "Restoring processor for document-id (".$cacheEntry->{key}.").");
-            print PROCESSORS $time . "#" . $_->getMappingType() . "#" . $_->getProcessorDefinition() . "\n";
+            print PROCESSORS $_->getMTime() . "#" . $_->getMappingType() . "#" . $_->getProcessorDefinition() . "\n";
         }
     close( PROCESSORS );
 
     open( DEPENDENCIES, ">" . $this->{cachefile} . "/". $cacheEntry->{key} . "/dependencies" );
         foreach( $cacheEntry->getDependencies() ) {
             $this->{logger}->debug( 9, "Restoring dependency: " . $_ . " => " . $_->{definition} );
-            print DEPENDENCIES $time . "#".ref( $_ ) . "#" . $_->{definition} . "\n";
+            print DEPENDENCIES $_->getMTime() . "#".ref( $_ ) . "#" . $_->{definition} . "\n";
         }
     close(DEPENDENCIES);
 }

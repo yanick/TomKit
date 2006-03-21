@@ -16,23 +16,26 @@
 ## at your option, any later version of Perl 5 you may have available.
 ##
 
-package Apache2::TomKit::IProvider;
+package TomKitTest::CustomProvider;
 
-use strict;
-use Carp;
-use warnings;
+use Apache2::Const;
+use Apache2::RequestIO;
+
+use base qw(Apache2::TomKit::Provider::FileSystemProvider);
 
 sub thandler {
-    carp "Subclasses have to implement this method";
-}
-
-sub getMTime {
-    carp "Subclasses have to implement this method";
-}
-
-## NOT USED AT THE MOMENT!
-sub createsDom {
-    carp "Subclasses have to implement this method";
+	my $this = shift;
+	my $apr  = shift;
+	
+	$this->{logger}->debug( 10, "Handler is called" );
+	
+	my $content = ${ $this->getFileContent() };
+	
+	$content =~ s/A1/C1/;
+	
+	$apr->print( $content );
+	
+	return Apache2::Const::OK;
 }
 
 1;

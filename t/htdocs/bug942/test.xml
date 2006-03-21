@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE any [
+<!ENTITY theindex SYSTEM "bug942/simple.xml">
+]>
+
+<html>
+<head>
+        <title>Simple CSS</title>
+</head>
+&theindex;
+</html>

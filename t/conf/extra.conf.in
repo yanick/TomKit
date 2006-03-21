@@ -1,6 +1,7 @@
 PerlSwitches -I@ServerRoot@/../lib
 
 PerlSetVar AxCacheDir @ServerRoot@/tmp/axkittest
+PerlSetVar AxDebugLevel 10
 
 <Location /xslt/base.xml>
     PerlFixupHandler Apache2::TomKit
@@ -12,5 +13,31 @@ PerlSetVar AxCacheDir @ServerRoot@/tmp/axkittest
     PerlFixupHandler Apache2::TomKit
     PerlAddVar AxAddProcessorDef "text/xsl=>xslt/base.xsl"
     PerlAddVar AxAddProcessorDef "text/xsl=>xslt/chain.xsl"
+    PerlSetVar AxAddProcessorMap "text/xsl=>Apache2::TomKit::Processor::LibXSLT"
+</Location>
+
+<Location /customprovider/base.xml>
+	PerlFixupHandler Apache2::TomKit
+	PerlSetVar AxAddProcessorDef "text/xsl=>xslt/base.xsl"
+    PerlSetVar AxAddProcessorMap "text/xsl=>Apache2::TomKit::Processor::LibXSLT"
+    PerlSetVar AxContentProvider "TomKitTest::CustomProvider"
+</Location>
+
+<Location /processorinxml/base.xml>
+	PerlFixupHandler Apache2::TomKit
+    PerlSetVar AxAddProcessorMap "text/xsl=>Apache2::TomKit::Processor::LibXSLT"
+</Location>
+
+
+# BUG FIXES
+<Location /bug942/test.xml>
+    PerlFixupHandler Apache2::TomKit
+    PerlSetVar AxAddProcessorDef "text/xsl=>bug942/test.xsl"
+    PerlSetVar AxAddProcessorMap "text/xsl=>Apache2::TomKit::Processor::LibXSLT"
+</Location>
+
+<Location /bug1996/test.xml>
+    PerlFixupHandler Apache2::TomKit
+    PerlSetVar AxAddProcessorDef "text/xsl=>bug1996/test.xsl"
     PerlSetVar AxAddProcessorMap "text/xsl=>Apache2::TomKit::Processor::LibXSLT"
 </Location>

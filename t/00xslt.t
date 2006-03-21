@@ -1,55 +1,17 @@
 use strict;
 use warnings FATAL => 'all';
+use lib qw( t/lib );
 
 use Apache2::TomKit;
 use Apache::Test;
 use Apache::TestUtil;
 use Apache::TestRequest 'GET_BODY';
 use File::Path;
+use TomKitTest::TestUtil;
+
 
 plan tests => 8;
 
-sub modifyCache {
-	my $filename = shift;
-	
-	open( CACHED, ">>$filename" );
-	print CACHED "<cached />";
-	close( CACHED );
-	
-}
-
-sub loadCachedData {
-	my $filename = shift;
-	my $data_retrieved;
-	
-	open(EXPECTED,"<$filename") or die "Could not open file: $filename";
-	
-	local $/= undef;
-	$data_retrieved = <EXPECTED>;
-	close(EXPECTED);
-	$data_retrieved =~ s/\s//g;
-	
-	return $data_retrieved;
-}
-
-sub updateTimestamp {
-	my $filename = shift;
-	my $amount   = shift || 1;
-	
-	my $time = time;
-	utime $time+$amount, $time+$amount, "$filename";
-}
-
-sub loadExpectedResult {
-	my $filename = shift;
-	my $data_expected;
-	
-	open(EXPECTED,"<$filename") or die "Could not open file: $filename";
-	local $/= undef;
-	$data_expected = <EXPECTED>;
-	close(EXPECTED);
-	return $data_expected;
-}
 
 rmtree "t/tmp";
 

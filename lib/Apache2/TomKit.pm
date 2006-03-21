@@ -1,10 +1,28 @@
+## -----------------------------------------------------------------
+## Copyright (c) 2005-2006 BestSolution.at EDV Systemhaus GmbH
+## All Rights Reserved.
+##
+## BestSolution.at GmbH MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE
+## SUITABILITY OF THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING
+## BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY,
+## FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+## BestSolution.at GmbH SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+## LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THIS
+## SOFTWARE OR ITS DERIVATIVES.
+## ----------------------------------------------------------------
+##
+## This library is free software; you can redistribute it and/or modify
+## it under the same terms as Perl itself, either Perl version 5.8.6 or,
+## at your option, any later version of Perl 5 you may have available.
+##
+
 package Apache2::TomKit;
 
 use 5.008006;
 use strict;
 use warnings;
 
-our $VERSION = '0.01_2';
+our $VERSION = '0.01_3';
 
 use Apache2::RequestRec;
 use Apache2::RequestUtil;
@@ -42,6 +60,7 @@ sub handler {
     my $config = new Apache2::TomKit::Config::DefaultConfig( $apr );
     my $logging = new Apache2::TomKit::Logging( $config );
 
+    $logging->debug(9, "======= Request is started =======");
     $logging->debug(9,"We are handling the source.");
 
     ## set up the processor chain and restore it in a pnote
@@ -161,6 +180,9 @@ from the processed file. This looks like the following:
 
   <!-- THE END OF THE XML-FILE -->
 
+Please note all relative paths are prefixed with the document-root if AxNoCompilance is set
+to 0. If AxNoCompilance is set to 1 all paths are relative to the root path!
+
 =head2 AxAddProcessorMap
 
 Configure the processor used to transform the input-source. The format looks like the
@@ -199,6 +221,14 @@ setting AxMTime in the HTTP-Header
 =back
 
 =back
+
+=head2 AxNoCompilance 0|1
+
+This turns off AxKit-Compilance which is not given out-of-the box. C<Chdir> to 
+document-root is possible automagically because of threading issues. Please note
+that running with no AxKit-Compilance may be faster and can be achieved by
+evaluating the special parameter "_TOMKIT_DocumentRoot" which is passed to 
+XSLT-Processors.
 
 =head1 SEE ALSO
 

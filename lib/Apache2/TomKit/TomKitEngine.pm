@@ -1,13 +1,29 @@
+## -----------------------------------------------------------------
+## Copyright (c) 2005-2006 BestSolution.at EDV Systemhaus GmbH
+## All Rights Reserved.
+##
+## BestSolution.at GmbH MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE
+## SUITABILITY OF THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING
+## BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY,
+## FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+## BestSolution.at GmbH SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+## LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THIS
+## SOFTWARE OR ITS DERIVATIVES.
+## ----------------------------------------------------------------
+##
+## This library is free software; you can redistribute it and/or modify
+## it under the same terms as Perl itself, either Perl version 5.8.6 or,
+## at your option, any later version of Perl 5 you may have available.
+##
+
 package Apache2::TomKit::TomKitEngine;
 
 use strict;
 use warnings;
 
-use File::Basename ();
-
 use Apache2::Filter ();
 use Apache2::RequestRec ();
-use Apache2::Const -compile => qw(OK);
+use Apache2::Const -compile => qw(OK SERVER_ERROR);
 use APR::Table ();
 
 use XML::LibXML;
@@ -30,7 +46,14 @@ sub handler {
     }
 
     if( $f->seen_eos ) {
-        runEngine($f);
+    	eval {
+    		runEngine($f);
+    	};
+    	
+    	if( $@ ) {
+    		$f->r->pnotes( "AxKitConfig" )->{apr}->log_error($@);
+    		$f->r->status( Apache2::Const::SERVER_ERROR );
+    	}
     }
 
     return Apache2::Const::OK;
@@ -57,9 +80,7 @@ sub runEngine {
 
     if( scalar @processorChain == 0 ) {
         $logging->debug(8,"There hasn't been a processor chain set up for us. We need to do it now!");
-        my $reloc = &File::Basename::dirname($f->r->filename());
-        $logging->debug( 10, "Reloc: " . $reloc );
-        my $handler = new Apache2::TomKit::TomKitEngine::SAXFilter($chain,$logging,$reloc);
+        my $handler = new Apache2::TomKit::TomKitEngine::SAXFilter($chain,$logging,$config);
         my $parser = XML::SAX::ParserFactory->parser(Handler => $handler);
         $parser->parse_string($f->ctx());
         @processorChain = @{ $chain->{chain} };
@@ -87,7 +108,7 @@ sub runEngine {
              );
 
         if( defined $cacheEntry ) {
-            my $util = Apache2::TomKit::Util::LibXML->new( $cacheEntry );
+            my $util = Apache2::TomKit::Util::LibXML->new( $cacheEntry, $logging, $config );
 
             $XML::LibXML::match_cb = sub { return $util->match_cb(@_); };
             $XML::LibXML::open_cb  = sub { return $util->open_cb(@_); };
@@ -120,6 +141,8 @@ sub runEngine {
             $f->print( $content );
         }
     }
+    
+    $logging->debug(9, "======= Request is finished =======");
 }
 
 package Apache2::TomKit::TomKitEngine::SAXFilter;
@@ -132,7 +155,7 @@ sub new {
 
     $this->{chain}  = shift;
     $this->{logger} = shift;
-    $this->{reloc}  = shift;
+    $this->{config} = shift;
 
     return $this;
 }
@@ -153,8 +176,12 @@ sub processing_instruction {
     $data->{Data} =~ /\s+type\s*=\s*"([^"]+)"/;
 
     my $type = $1;
-
-    $this->{chain}->add2chain( $type, $this->{reloc} . "/" . $href );
+	
+	if( ! $this->{config}->getNoCompilance() ) {
+		$this->{chain}->add2chain( $type, $this->{config}->{apr}->document_root . "/" . $href );
+	} else {
+		$this->{chain}->add2chain( $type, $href );
+	}
 }
 
 1;
