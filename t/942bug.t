@@ -15,6 +15,8 @@ plan tests => 5;
 
 rmtree "t/tmp";
 
+my $baseCacheKey = &precalculateSimpleCacheKey("/bug942/test.xml");
+
 ## ----------------------------------------
 ## TEST 1
 ## ----------------------------------------
@@ -34,7 +36,7 @@ ok t_cmp(
 	"dependencies in document base test",
 );
 
-$data_retrieved = &loadCachedData( "t/tmp/axkittest/1cf438339cdc27bfe2603fe34217bee1/content" );
+$data_retrieved = &loadCachedData( "t/tmp/axkittest/$baseCacheKey/content" );
 $data_retrieved =~ s/\s//g;
 
 ok t_cmp (
@@ -48,7 +50,7 @@ ok t_cmp (
 ## ----------------------------------------
 ## content has to be retrieved from cache
 
-&modifyCache("t/tmp/axkittest/1cf438339cdc27bfe2603fe34217bee1/content");
+&modifyCache("t/tmp/axkittest/$baseCacheKey/content");
 
 $data_retrieved = GET_BODY "/bug942/test.xml";
 $data_retrieved =~ s/\s//g;

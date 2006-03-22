@@ -19,8 +19,11 @@
 package TomKitTest::TestUtil;
 
 use Exporter();
+use Digest::MD5 qw( md5_hex );
+use Apache::TestConfig;
+
 @ISA = qw(Exporter);
-@EXPORT = qw(&loadExpectedResult &loadCachedData &updateTimestamp &modifyCache);
+@EXPORT = qw(&loadExpectedResult &loadCachedData &updateTimestamp &modifyCache &precalculateSimpleCacheKey );
 
 
 sub loadExpectedResult {
@@ -63,6 +66,13 @@ sub modifyCache {
 	print CACHED "<cached />";
 	close( CACHED );
 	
+}
+
+sub precalculateSimpleCacheKey {
+	my $uri = shift;
+	my $vars = Apache::Test::config()->{vars};
+
+	return md5_hex( $vars->{servername} . $uri );
 }
 
 1;

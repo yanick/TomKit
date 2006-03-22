@@ -30,6 +30,8 @@ plan tests => 4;
 
 rmtree "t/tmp";
 
+my $baseCacheKey = &precalculateSimpleCacheKey("/customprovider/base.xml");
+
 ## ----------------------------------------
 ## TEST 1
 ## ----------------------------------------
@@ -47,7 +49,7 @@ ok t_cmp(
 	"custom provider",
 );
 
-$data_retrieved = &loadCachedData( "t/tmp/axkittest/a65d3eef3a0483b2f6a43ef81596f3af/content" );
+$data_retrieved = &loadCachedData( "t/tmp/axkittest/$baseCacheKey/content" );
 
 ok t_cmp (
 	$data_expected,
@@ -60,7 +62,7 @@ ok t_cmp (
 ## ----------------------------------------
 ## content has to be retrieved from cache
 
-&modifyCache("t/tmp/axkittest/a65d3eef3a0483b2f6a43ef81596f3af/content");
+&modifyCache("t/tmp/axkittest/$baseCacheKey/content");
 
 $data_retrieved = GET_BODY "/customprovider/base.xml";
 $data_retrieved =~ s/\s//g;

@@ -52,7 +52,7 @@ sub handler {
     	
     	if( $@ ) {
     		$f->r->pnotes( "AxKitConfig" )->{apr}->log_error($@);
-    		$f->r->status( Apache2::Const::SERVER_ERROR );
+		$f->r->status( Apache2::Const::SERVER_ERROR );
     	}
     }
 

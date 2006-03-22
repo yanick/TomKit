@@ -6,7 +6,7 @@ Revision history for Perl extension TomKit.
 0.01_2  Thu Dec 28 2005
         - fixed various bugs and released to CPAN
 
-0.01_3	Fri Mar 21 2006
+0.01_3	Mo Mar 21 2006
 	- added test for custom providers
 	- added many many other tests
 	- fixed bugs: 
@@ -16,3 +16,5 @@ Revision history for Perl extension TomKit.
 		- https://webmail.bestsolution.at/mantis/view.php?id=1996
 		  if a transformation error occurrs an internal server is sent to the
 		  user
+0.01_4  Wed Mar 23 2006
+        - fixed failures of test suite when not running on test server

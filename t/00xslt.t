@@ -15,6 +15,10 @@ plan tests => 8;
 
 rmtree "t/tmp";
 
+my $baseCacheKey = &precalculateSimpleCacheKey("/xslt/base.xml"); 
+my $chainCacheKey = &precalculateSimpleCacheKey("/xslt/chain.xml"); 
+
+
 ## ----------------------------------------
 ## TEST 1
 ## ----------------------------------------
@@ -32,7 +36,7 @@ ok t_cmp(
 	"basic test",
 );
 
-$data_retrieved = &loadCachedData( "t/tmp/axkittest/3a4b76c920aa5905537db36fe62a917f/content" );
+$data_retrieved = &loadCachedData( "t/tmp/axkittest/$baseCacheKey/content" );
 
 ok t_cmp (
 	$data_expected,
@@ -59,7 +63,7 @@ ok t_cmp(
 	"chain test",
 );
 
-$data_retrieved = &loadCachedData( "t/tmp/axkittest/fdd87d29fa5b59d8ccc5f76084907a93/content" );
+$data_retrieved = &loadCachedData( "t/tmp/axkittest/$chainCacheKey/content" );
 
 ok t_cmp (
 	$data_expected,
@@ -76,7 +80,7 @@ ok t_cmp (
 ## + nochain: content has to be retrieved from cache
 ## + with chain: content has to be retrieved from cache
 
-&modifyCache("t/tmp/axkittest/3a4b76c920aa5905537db36fe62a917f/content");
+&modifyCache("t/tmp/axkittest/$baseCacheKey/content");
 
 $data_retrieved = GET_BODY "/xslt/base.xml";
 $data_retrieved =~ s/\s//g;
@@ -90,7 +94,7 @@ ok t_cmp(
 );
 
 
-&modifyCache("t/tmp/axkittest/fdd87d29fa5b59d8ccc5f76084907a93/content");
+&modifyCache("t/tmp/axkittest/$chainCacheKey/content");
 
 $data_retrieved = GET_BODY "/xslt/chain.xml";
 $data_retrieved =~ s/\s//g;
@@ -111,7 +115,7 @@ ok t_cmp(
 ## + nochain: cache invalidated by modified source
 ## + nochain: cache invalidated by modified xslt
 
-&modifyCache("t/tmp/axkittest/3a4b76c920aa5905537db36fe62a917f/content");
+&modifyCache("t/tmp/axkittest/$baseCacheKey/content");
 &updateTimestamp("t/htdocs/xslt/base.xml",1);
 
 $data_retrieved = GET_BODY "/xslt/base.xml";
@@ -126,7 +130,7 @@ ok t_cmp(
 	"basic test source xml modified",
 );
 
-&modifyCache("t/tmp/axkittest/3a4b76c920aa5905537db36fe62a917f/content");
+&modifyCache("t/tmp/axkittest/$baseCacheKey/content");
 &updateTimestamp("t/htdocs/xslt/base.xsl",1);
 
 $data_retrieved = GET_BODY "/xslt/base.xml";
