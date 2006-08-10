@@ -18,8 +18,10 @@
 
 package Apache2::TomKit::Cache::AbstractCache;
 
-use APR::Finfo ();
-use Apache2::RequestRec ();
+use APR::Finfo();
+use Apache2::RequestRec();
+use Apache2::TomKit::Util();
+use Apache2::TomKit::Cache::DefaultKeyBuilder();
 
 use strict;
 use warnings;
@@ -28,11 +30,20 @@ sub new {
     my $class  = shift;
     my $logger = shift;
     my $config = shift;
+	
+	my $keyBuilder;
+	
+	if( ! defined $config->getCacheKeyBuilder() ) {
+	    $keyBuilder = Apache2::TomKit::Cache::DefaultKeyBuilder->new( $logger, $config );
+	} else {
+		&Apache2::TomKit::Util::loadModule( $config->getCacheKeyBuilder() );
+		$keyBuilder = $config->getCacheKeyBuilder()->new( $logger, $config );
+	}
 
     return bless { 
                     logger     => $logger, 
                     config     => $config,
-                    keyBuilder => new Apache2::TomKit::Cache::DefaultKeyBuilder( $logger, $config )
+                    keyBuilder => $keyBuilder
                  }, $class;
 }
 

@@ -27,7 +27,7 @@ use Apache2::Const -compile => qw(OK SERVER_ERROR);
 use APR::Table ();
 
 use XML::LibXML;
-use XML::SAX::ParserFactory;
+use XML::LibXML::SAX::Parser;
 
 use constant BUFF_LEN => 1024;
 
@@ -81,7 +81,7 @@ sub runEngine {
     if( scalar @processorChain == 0 ) {
         $logging->debug(8,"There hasn't been a processor chain set up for us. We need to do it now!");
         my $handler = new Apache2::TomKit::TomKitEngine::SAXFilter($chain,$logging,$config);
-        my $parser = XML::SAX::ParserFactory->parser(Handler => $handler);
+        my $parser = XML::LibXML::SAX::Parser->new(Handler => $handler);
         $parser->parse_string($f->ctx());
         @processorChain = @{ $chain->{chain} };
     }
@@ -103,19 +103,11 @@ sub runEngine {
     } else {
         my $parser = new XML::LibXML();
 
-        local($XML::LibXML::match_cb, $XML::LibXML::open_cb,
-              $XML::LibXML::read_cb, $XML::LibXML::close_cb
-             );
-
-        if( defined $cacheEntry ) {
-            my $util = Apache2::TomKit::Util::LibXML->new( $cacheEntry, $logging, $config );
-
-            $XML::LibXML::match_cb = sub { return $util->match_cb(@_); };
-            $XML::LibXML::open_cb  = sub { return $util->open_cb(@_); };
-            $XML::LibXML::read_cb  = sub { return $util->read_cb(@_); };
-            $XML::LibXML::close_cb = sub { return $util->close_cb(@_); };
-        }
-
+        my $util = Apache2::TomKit::Util::LibXML->new( $cacheEntry, $logging, $config );
+  	my $input_callbacks = XML::LibXML::InputCallback->new();
+	$input_callbacks->register_callbacks([ sub { return $util->match_cb(@_); }, sub { return $util->open_cb(@_); }, sub { return $util->read_cb(@_); }, sub { return $util->close_cb(@_); } ]);
+	$parser->input_callbacks( $input_callbacks );
+        	
         my $dom    = $parser->parse_string( $f->ctx() );
 
         foreach( @processorChain ) {
@@ -123,7 +115,7 @@ sub runEngine {
             $dom = $_->process($dom);
 
             if( $_->createsXML() && ! $_->createsDom() ) {
-                $dom = $parser->parse_string();
+                $dom = $parser->parse_string( $dom );
             }
 
             $processor = $_;
@@ -176,7 +168,11 @@ sub processing_instruction {
     $data->{Data} =~ /\s+type\s*=\s*"([^"]+)"/;
 
     my $type = $1;
-	
+
+    $this->{logger}->debug(10, "Extracted href => $href");
+    $this->{logger}->debug(10, "Extracted type => $type");
+
+    
 	if( ! $this->{config}->getNoCompilance() ) {
 		$this->{chain}->add2chain( $type, $this->{config}->{apr}->document_root . "/" . $href );
 	} else {

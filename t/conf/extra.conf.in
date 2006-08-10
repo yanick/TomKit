@@ -17,8 +17,8 @@ PerlSetVar AxDebugLevel 10
 </Location>
 
 <Location /customprovider/base.xml>
-	PerlFixupHandler Apache2::TomKit
-	PerlSetVar AxAddProcessorDef "text/xsl=>xslt/base.xsl"
+    PerlFixupHandler Apache2::TomKit
+    PerlSetVar AxAddProcessorDef "text/xsl=>xslt/base.xsl"
     PerlSetVar AxAddProcessorMap "text/xsl=>Apache2::TomKit::Processor::LibXSLT"
     PerlSetVar AxContentProvider "TomKitTest::CustomProvider"
 </Location>
@@ -28,6 +28,12 @@ PerlSetVar AxDebugLevel 10
     PerlSetVar AxAddProcessorMap "text/xsl=>Apache2::TomKit::Processor::LibXSLT"
 </Location>
 
+<Location /cgicache/base.xml>
+    PerlFixupHandler Apache2::TomKit
+	PerlSetVar AxEnableCGICache 1
+	PerlSetVar AxAddProcessorDef "text/xsl=>cgicache/base.xsl"
+	PerlSetVar AxAddProcessorMap "text/xsl=>Apache2::TomKit::Processor::LibXSLT"
+</Location>
 
 # BUG FIXES
 <Location /bug942/test.xml>

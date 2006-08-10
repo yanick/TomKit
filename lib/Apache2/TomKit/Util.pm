@@ -23,6 +23,7 @@ use warnings;
 use Carp;
 
 our %registeredProtocols;
+our %loadedModules;
 
 
 ## -----------------------------------------------
@@ -38,9 +39,13 @@ our %registeredProtocols;
 ##      void
 sub loadModule {
     my $module = shift;
-    $module =~ s/::/\//g;
-    $module .= ".pm";
-    require( $module );
+	
+	if( ! exists $loadedModules{$module} ) {
+	    $module =~ s/::/\//g;
+        $module .= ".pm";
+        require( $module );
+		$loadedModules{$module} = 1;
+	}
 }
 
 ## -----------------------------------------------
@@ -128,26 +133,36 @@ sub match_cb {
 	$uri =~ /^((\w+:\/\/)|\/)/;
 	my $protocol = $1;
 
-    $this->{logger}->debug( 9, "Protocol: " . $protocol );
+        if( ! defined $protocol ) {
+	    $protocol = "file://";
+	    $uri = "file://" . $uri;
+	}
+
+        $this->{logger}->debug( 9, "Protocol: " . $protocol );
 
 	if( ! $this->{config}->getNoCompilance() ) {
 		if( $protocol eq "" ) {
-    		$this->{logger}->debug( 9, "Setting new Protocol to file because we are running in AxKit-Compilance mode" );
-    	 	$protocol = "file://";
-    	 	$uri = $this->{config}->{apr}->document_root() . "/" . $uri;
-    	} elsif( $uri =~ /^file:\/\/\w/ ) {
-    		$uri =~ s/^file:\/\///;
-    		$uri = $this->{config}->{apr}->document_root() . "/" . $uri;
-    	}
+    		    $this->{logger}->debug( 9, "Setting new Protocol to file because we are running in AxKit-Compilance mode" );
+    	 	    $protocol = "file://";
+    	 	    $uri = $this->{config}->{apr}->document_root() . "/" . $uri;
+    	    	} elsif( $uri =~ /^file:\/\/\w/ ) {
+    		    $uri =~ s/^file:\/\///;
+    		    $uri = $this->{config}->{apr}->document_root() . "/" . $uri;
+    	    	}
 	}
     
 
 	# Check if this protocol is handled by use
     if( &Apache2::TomKit::Util::isProtocolRegistered( $protocol ) ) {
-    	## We need to add us self to the dependencies
     	my $dependency = Apache2::TomKit::Util::createDependency( $this->{logger}, $this->{config}, $protocol,$uri);
-    	$this->{dependencyCollector}->addDependency($dependency);
-    	
+	
+	# only add the dependency if there's a collector there are situations e.g.
+	# when caching is turned of where dependencies don't have to be collected
+	if( defined $this->{dependencyCollector} ) {
+	   ## We need to add us self to the dependencies   
+    	   $this->{dependencyCollector}->addDependency($dependency);
+	}
+	
     	if( $uri =~ /file:\/\/\/etc\/xml\/catalog/ ) {
     		## We don't handle Catalog requests
     		return 0;
@@ -176,13 +191,16 @@ sub match_cb {
 
 sub open_cb {
     my $this = shift;
-    $this->{logger}->debug(9,"INSTRUCTIONS: " . $this->{cached_dependency}->getInstructions());
+    $this->{logger}->debug(9,"INSTRUCTIONS: " . $this->{cached_dependency} . " => " . $this->{cached_dependency}->getInstructions());
+    #$this->{logger}->debug(9,"THE CONTENT LOADED: " . $this->{cached_dependency}->getContent() );
 
-    return $this->{cached_dependency}->getContent();
+    my $rv = $this->{cached_dependency}->getContent();
+    return \$rv;
 }
 
 sub read_cb {
-    return substr($_[1], 0, $_[2], "");
+#    $_[0]->{logger}->debug(9,"Reading chunk: " . substr(${$_[1]}, 0, $_[2], "") ); 
+    return substr(${$_[1]}, 0, $_[2], "");
 }
 
 sub close_cb {

@@ -43,11 +43,6 @@ $data_retrieved =~ s/\s//g;
 
 my $data_expected = &loadExpectedResult("t/expected-results/processorinxml/base-test.txt");
 
-open( OUT, ">/tmp/req" );
-print OUT $data_retrieved . "\n";
-print OUT $data_expected;
-close( OUT );
-
 ok t_cmp(
 	$data_expected,
 	$data_retrieved,

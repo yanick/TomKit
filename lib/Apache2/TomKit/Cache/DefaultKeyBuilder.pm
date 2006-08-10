@@ -41,9 +41,14 @@ sub buildKey {
 
     ## add the request params to the key for caching
     if( $this->{config}->getEnableCGICache() ) {
+	    $this->{logger}->debug(9,"Using CGI-Parameters in Cache");
+		
         my @keys = $this->{config}->getCGICacheKeys();
 
-        if( scalar @keys == 0 ) {
+        $this->{logger}->debug(9,"Cache-Keys: " . scalar(@keys) . " => " . join(",",@keys) );
+
+        if( scalar(@keys) == 0 ) {
+			$this->{logger}->debug(9,"Use all parameters with the keys");
             @keys = $this->{config}->{apr}->param();
         }
 
@@ -69,9 +74,22 @@ sub buildKey {
     ## TODO add the session information to the caching key
     my $md5 = md5_hex( $keySourceString );
 
-    $this->{logger}->debug(9,"The key: " . $host . $uri . " => " . $md5 );
+    $this->{logger}->debug(9,"The key: " . $keySourceString . " => " . $md5 );
 
     return $md5;
+}
+
+sub createKeyValueFilter {
+	my %filters;
+	my $key;
+	my $value;
+	
+	foreach( @_ ) {
+	    ($key,$value) = split ( "=>", $_ );
+	    $filters{$key} = $value;
+	}
+	
+	return %filters;
 }
 
 1;

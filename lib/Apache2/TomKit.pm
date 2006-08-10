@@ -22,7 +22,7 @@ use 5.008006;
 use strict;
 use warnings;
 
-our $VERSION = '0.01_4';
+our $VERSION = '0.01_5';
 
 use Apache2::RequestRec;
 use Apache2::RequestUtil;
@@ -229,6 +229,11 @@ document-root is possible automagically because of threading issues. Please note
 that running with no AxKit-Compilance may be faster and can be achieved by
 evaluating the special parameter "_TOMKIT_DocumentRoot" which is passed to 
 XSLT-Processors.
+
+=head2 AxEnableCGICache 0|1
+
+Setting this flag to true the cgi-parameters passed are also taken into 
+consideration when the cache-key is generated.
 
 =head1 SEE ALSO
 

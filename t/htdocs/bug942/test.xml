@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE any [
-<!ENTITY theindex SYSTEM "bug942/simple.xml">
+<!ENTITY theindex SYSTEM "file://bug942/simple.xml">
 ]>
 
 <html>

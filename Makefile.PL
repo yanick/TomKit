@@ -5,8 +5,11 @@ use Apache::TestMM qw(test clean);
 # prerequisites
 my %require =
 (
-	"Apache::Test"    => "", # any version will do
-	"mod_perl2"       => "", # any version will do
+	"Apache::Test"    => "",     # any version will do
+	"mod_perl2"       => "",     # any version will do
+	"XML::LibXML"     => "1.59", # new callback mechanism
+	"XML::LibXSLT"    => "1.59", # new callback mechanism
+	"APR::Request"    => "",     # any version will to
 );
 
 my @scripts = qw(t/TEST t/tmp);

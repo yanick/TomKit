@@ -18,3 +18,8 @@ Revision history for Perl extension TomKit.
 		  user
 0.01_4  Wed Mar 23 2006
         - fixed failures of test suite when not running on test server
+
+0.01_5 	Tue Aug 10 2006
+        - performance improvement when loading libs dynamically
+        - fixed to use new LibXML-Callbacks
+        - removed XML::SAX because it is buggy

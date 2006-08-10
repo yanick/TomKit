@@ -57,23 +57,20 @@ sub setUp {
     my $parser   = new XML::LibXML(); 
     my $xslt = XML::LibXSLT->new();
 
-    local($XML::LibXML::match_cb, $XML::LibXML::open_cb,
-          $XML::LibXML::read_cb, $XML::LibXML::close_cb);
-
     my $util = Apache2::TomKit::Util::LibXML->new( $this, $this->{logger}, $this->{config} );
+    
 
     $this->{logger}->debug(10,"Start parsing XSL-Stylesheet");
-
-    $XML::LibXML::match_cb = sub { return $util->match_cb(@_); };
-    $XML::LibXML::open_cb  = sub { return $util->open_cb(@_); };
-    $XML::LibXML::read_cb  = sub { return $util->read_cb(@_); };
-    $XML::LibXML::close_cb = sub { return $util->close_cb(@_); };
 
     my $style_doc;
 
     $style_doc = $parser->parse_string( $this->{processordef}->getContent() );
     
     my $stylesheet = $xslt->parse_stylesheet($style_doc);
+    
+    my $input_callbacks = XML::LibXML::InputCallback->new();
+    $input_callbacks->register_callbacks([ sub { return $util->match_cb(@_); }, sub { return $util->open_cb(@_); }, sub { return $util->read_cb(@_); }, sub { return $util->close_cb(@_); } ]);
+    $stylesheet->input_callbacks( $input_callbacks );
 
     $this->{logger}->debug(10,"End parsing XSL-Stylesheet");
 
@@ -86,6 +83,7 @@ sub process {
     my $input = shift;
 
     $this->{logger}->debug(9,"LibXSLT: Is processing the source with stylesheet: " . $this->{processordef} );
+    $this->{logger}->debug(9,"INPUT: " . $input->toString() );
 
     return $this->{stylesheet}->transform( $input );
 }

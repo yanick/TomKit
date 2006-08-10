@@ -24,8 +24,8 @@ use warnings;
 our $AUTOLOAD;
 
 our %Config = (
-    AxNoCache    => 0,
-    XSLTEnhancedDynamicTagLibLoading => 0,
+    AxNoCache                        => 0,
+    XSLTEnhancedDynamicTagLibLoading => 0
 );
 
 sub new {
@@ -56,6 +56,13 @@ sub getTagLibs {
     my @taglibs = $this->{config}->get("AxAddXSPTaglib");
 
     return @taglibs;
+}
+
+sub getCGICacheKeys {
+    my $this = shift;
+	my @cgiKeys = $this->{config}->get("AxAddCGICacheKeys");
+	
+	return @cgiKeys;
 }
 
 sub AUTOLOAD {
