@@ -23,3 +23,6 @@ Revision history for Perl extension TomKit.
         - performance improvement when loading libs dynamically
         - fixed to use new LibXML-Callbacks
         - removed XML::SAX because it is buggy
+
+0.01_6 Mon Aug 14 2006
+        - fixed problems with XSLT-Callbacks

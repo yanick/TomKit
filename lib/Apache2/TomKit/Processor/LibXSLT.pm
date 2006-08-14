@@ -55,10 +55,17 @@ sub setUp {
     return if( $this->{stylesheet} );
 
     my $parser   = new XML::LibXML(); 
-    my $xslt = XML::LibXSLT->new();
-
+    my $xslt = new XML::LibXSLT();
     my $util = Apache2::TomKit::Util::LibXML->new( $this, $this->{logger}, $this->{config} );
-    
+
+    my $input_callbacks = new XML::LibXML::InputCallback();
+    $input_callbacks->register_callbacks([ sub { return $util->match_cb(@_); }, sub { return $util->open_cb(@_); }, sub { return $util->read_cb(@_); }, sub { return $util->close_cb(@_); } ]);
+
+    $xslt->input_callbacks( $input_callbacks );
+
+    $input_callbacks = new XML::LibXML::InputCallback();
+    $input_callbacks->register_callbacks([ sub { return $util->match_cb(@_); }, sub { return $util->open_cb(@_); }, sub { return $util->read_cb(@_); }, sub { return $util->close_cb(@_); } ]);
+    $parser->input_callbacks( $input_callbacks );
 
     $this->{logger}->debug(10,"Start parsing XSL-Stylesheet");
 
@@ -67,10 +74,7 @@ sub setUp {
     $style_doc = $parser->parse_string( $this->{processordef}->getContent() );
     
     my $stylesheet = $xslt->parse_stylesheet($style_doc);
-    
-    my $input_callbacks = XML::LibXML::InputCallback->new();
-    $input_callbacks->register_callbacks([ sub { return $util->match_cb(@_); }, sub { return $util->open_cb(@_); }, sub { return $util->read_cb(@_); }, sub { return $util->close_cb(@_); } ]);
-    $stylesheet->input_callbacks( $input_callbacks );
+#    $stylesheet->input_callbacks( $input_callbacks );
 
     $this->{logger}->debug(10,"End parsing XSL-Stylesheet");
 

@@ -24,6 +24,8 @@ t/00basic.t
 t/00xslt.t
 t/01customprovider.t
 t/02processorinxml.t
+t/03cgicache.t
+t/04xslimport.t
 t/1996bug.t
 t/942bug.t
 t/conf/extra.conf.in
@@ -38,6 +40,10 @@ t/expected-results/xslt/base-cached-test.txt
 t/expected-results/xslt/base-test.txt
 t/expected-results/xslt/chain-cached-test.txt
 t/expected-results/xslt/chain-test.txt
+t/expected-results/cgicache/base-cached-test.txt
+t/expected-results/cgicache/base-test.txt
+t/expected-results/xsl-import/base-cached-test.txt
+t/expected-results/xsl-import/base-test.txt
 t/htdocs/bug1996/test.xml
 t/htdocs/bug1996/test.xsl
 t/htdocs/bug942/simple.xml
@@ -51,7 +57,13 @@ t/htdocs/xslt/base.xml
 t/htdocs/xslt/base.xsl
 t/htdocs/xslt/chain.xml
 t/htdocs/xslt/chain.xsl
+t/htdocs/cgicache/base.xml
+t/htdocs/cgicache/base.xsl
+t/htdocs/xsl-import/base.xml
+t/htdocs/xsl-import/base.xsl
+t/htdocs/xsl-import/imported.xsl
+t/htdocs/xsl-import/test.pl
 t/lib/TomKitTest/CustomProvider.pm
 t/lib/TomKitTest/TestUtil.pm
 t/TEST.PL
-META.yml                                 Module meta-data (added by MakeMaker)
+META.yml

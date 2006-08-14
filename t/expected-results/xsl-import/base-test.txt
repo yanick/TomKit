@@ -1,0 +1,1 @@
+<?xmlversion="1.0"?><result><import/><columnvalue="A1"/><columnvalue="B1"/><columnvalue="A2"/><columnvalue="B2"/></result>

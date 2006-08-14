@@ -22,7 +22,7 @@ use 5.008006;
 use strict;
 use warnings;
 
-our $VERSION = '0.01_5';
+our $VERSION = '0.01_6';
 
 use Apache2::RequestRec;
 use Apache2::RequestUtil;
@@ -129,7 +129,7 @@ __END__
 
 =head1 NAME
 
-TomKit - Perl Module used to Transform Content
+Apache2::TomKit - Perl Module used to Transform Content
 
 =head1 SYNOPSIS
 
@@ -234,6 +234,17 @@ XSLT-Processors.
 
 Setting this flag to true the cgi-parameters passed are also taken into 
 consideration when the cache-key is generated.
+
+
+=head2 AxCacheDir /path/to/cache
+
+You can configure the path where TomKit restores the cached results. If you don't
+set any the default location is created using 'File::Spec->tmpdir() . "/axkit"'
+
+=head2 AxDebugLevel 1-n
+
+You set the debug-level verbosity of TomKit to debug your XSLTs the default level is
+0 where only errors are logged
 
 =head1 SEE ALSO
 

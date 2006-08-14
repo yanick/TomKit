@@ -30,9 +30,16 @@ PerlSetVar AxDebugLevel 10
 
 <Location /cgicache/base.xml>
     PerlFixupHandler Apache2::TomKit
-	PerlSetVar AxEnableCGICache 1
-	PerlSetVar AxAddProcessorDef "text/xsl=>cgicache/base.xsl"
-	PerlSetVar AxAddProcessorMap "text/xsl=>Apache2::TomKit::Processor::LibXSLT"
+    PerlSetVar AxEnableCGICache 1
+    PerlSetVar AxAddProcessorDef "text/xsl=>cgicache/base.xsl"
+    PerlSetVar AxAddProcessorMap "text/xsl=>Apache2::TomKit::Processor::LibXSLT"
+</Location>
+
+<Location /xsl-import/base.xml>
+    PerlFixupHandler Apache2::TomKit
+    PerlSetVar AxEnableCGICache 1
+    PerlSetVar AxAddProcessorDef "text/xsl=>xsl-import/base.xsl"
+    PerlSetVar AxAddProcessorMap "text/xsl=>Apache2::TomKit::Processor::LibXSLT"
 </Location>
 
 # BUG FIXES
