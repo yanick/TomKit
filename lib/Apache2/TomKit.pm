@@ -22,7 +22,7 @@ use 5.008006;
 use strict;
 use warnings;
 
-our $VERSION = '0.01_6';
+our $VERSION = '0.01_7';
 
 use Apache2::RequestRec;
 use Apache2::RequestUtil;

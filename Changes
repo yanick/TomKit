@@ -1,10 +1,18 @@
 Revision history for Perl extension TomKit.
 
-0.01_1  Thu Apr 20 2005
-	- initial version released to public
+0.01_7 
+    - remove use of $_. [RT16868]
 
-0.01_2  Thu Dec 28 2005
-        - fixed various bugs and released to CPAN
+0.01_6 Mon Aug 14 2006
+        - fixed problems with XSLT-Callbacks
+
+0.01_5 	Tue Aug 10 2006
+        - performance improvement when loading libs dynamically
+        - fixed to use new LibXML-Callbacks
+        - removed XML::SAX because it is buggy
+
+0.01_4  Wed Mar 23 2006
+        - fixed failures of test suite when not running on test server
 
 0.01_3	Mo Mar 21 2006
 	- added test for custom providers
@@ -16,13 +24,9 @@ Revision history for Perl extension TomKit.
 		- https://webmail.bestsolution.at/mantis/view.php?id=1996
 		  if a transformation error occurrs an internal server is sent to the
 		  user
-0.01_4  Wed Mar 23 2006
-        - fixed failures of test suite when not running on test server
 
-0.01_5 	Tue Aug 10 2006
-        - performance improvement when loading libs dynamically
-        - fixed to use new LibXML-Callbacks
-        - removed XML::SAX because it is buggy
+0.01_2  Thu Dec 28 2005
+        - fixed various bugs and released to CPAN
 
-0.01_6 Mon Aug 14 2006
-        - fixed problems with XSLT-Callbacks
+0.01_1  Thu Apr 20 2005
+	- initial version released to public

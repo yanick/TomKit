@@ -110,15 +110,14 @@ sub runEngine {
         	
         my $dom    = $parser->parse_string( $f->ctx() );
 
-        foreach( @processorChain ) {
-            $_->setUp();
-            $dom = $_->process($dom);
+        foreach my $p ( @processorChain ) {
+            $p->setUp();
+            $dom = $p->process($dom);
 
-            if( $_->createsXML() && ! $_->createsDom() ) {
-                $dom = $parser->parse_string( $dom );
-            }
+            $dom = $parser->parse_string( $dom ) 
+                if $p->createsXML and not $p->createsDom;
 
-            $processor = $_;
+            $processor = $p;
         }
 
         if( defined $processor ) {
